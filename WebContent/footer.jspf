@@ -1,0 +1,9 @@
+		<footer>
+			<form>
+				<p>
+					<input type="submit" id="switchColour" value="Switch Colour">
+				</p>
+			</form>
+			
+			&copy; Webontwikkeling 3, UC Leuven-Limburg
+		</footer>
