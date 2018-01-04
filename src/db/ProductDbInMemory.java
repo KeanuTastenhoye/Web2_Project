@@ -11,10 +11,10 @@ public class ProductDbInMemory implements ProductDb {
 	private Map<Integer, Product> records = new HashMap<Integer, Product>();
 	
 	public ProductDbInMemory () {
-		Product rose = new Product("Rose", "Thorny plant", 2.25, 65);
+		Product rose = new Product("Rose", "Thorny plant", 2.25);
 		add(rose);
 	}
-
+	
 	@Override
 	public Product get(int id){
 		if(id < 0){

@@ -2,15 +2,10 @@ package view;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.Properties;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,10 +19,11 @@ import domain.ShopService;
 @WebServlet("/Controller")
 public class Controller extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-    private ShopService service;
+	private final ShopService service;
        
     public Controller() {
         super();
+        service = new ShopService();
     }
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -38,443 +34,365 @@ public class Controller extends HttpServlet {
 		verwerkRequest(request, response);
 	}
 	
-	@Override
-	public void init() throws ServletException {
-		super.init();
-		
-		ServletContext context = getServletContext();
-		
-		Properties properties = new Properties();
-				
-		properties.setProperty("user", context.getInitParameter("user"));
-		properties.setProperty("password", context.getInitParameter("password"));
-		properties.setProperty("ssl", context.getInitParameter("ssl"));
-		properties.setProperty("sslfactory", context.getInitParameter("sslfactory"));
-		properties.setProperty("url", context.getInitParameter("url"));
-		
-		service = new ShopService(properties);
-	}
-	
-	protected void verwerkRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
-		Cookie q = null;
-		if (request.getCookies() != null) {
-			for (Cookie c: request.getCookies()) {
-				if (c.getName().equals("color")) {
-					q = c;
-					break;
-				}
-			}
-		}
-		
-		if (q == null) {
-			q = new Cookie("color", "yellow");
-		}
-		
-		String color = q.getValue();
-		if (!(color.equals("yellow") || color.equals("red"))) {
-			request.setAttribute("color", "yellow");
-		}
-		
-		else {
-			request.setAttribute("color", color);
-		}
-		
-		String doel;
+	private void verwerkRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String action = request.getParameter("action");
-		if (action == null) {
-			action = "";
-		}
+			if (action == null) {
+				action = "";
+			}
 		
 		switch(action) {
-			case "signUp":
-				doel = "signUp.jsp";
+			case "personOverview":
+				personOverview(request, response);
 			break;
 			
-			case "addProduct":
-				doel = "addProduct.jsp";
+			case "productOverview":
+				productOverview(request, response);
 			break;
 			
-			case "update":
-				doel = "update.jsp";
+			case "naarSignUp":
+				naarSignUp(request, response);
 			break;
 			
-			case "nieuwPerson":
-				doel = maakUser(request, response);
+			case "naarAddProduct":
+				naarAddProduct(request, response);
 			break;
 			
-			case "nieuwProduct":
-				doel = maakProduct(request, response);
+			case "registerPerson":
+				registerPerson(request, response);
 			break;
 			
-			case "toonPerson":
-				doel = toonUser(request, response);
-			break;
-			
-			case "toonProduct":
-				doel = toonProduct(request, response);
-			break;
-			
-			case "deleteProduct":
-				doel = deleteProduct(request, response);
-			break;
-			
-			case "deletePerson":
-				doel = deletePerson(request, response);
-			break;
-			
-			case "naarDeleteConfirmationProduct":
-				doel = "deleteConfirmationProduct.jsp";
-			break;
-			
-			case "naarDeleteConfirmationPerson":
-				doel = "deleteConfirmationPerson.jsp";
+			case "registerProduct":
+				registerProduct(request, response);
 			break;
 			
 			case "updateProduct":
-				doel = updateProduct(request, response);
+				updateProduct(request, response);
 			break;
 			
-			case "naarSorteer":
-				doel = "sorteer.jsp";
+			case "editProduct":
+				editProduct(request, response);
 			break;
 			
-			case "checkPasswoord":
-				doel = check(request, response);
+			case "removeProduct":
+				removeProduct(request, response);
 			break;
 			
-			case "verify":
-				doel = verifyPassword(request, response);
+			case "removePerson":
+				removePerson(request, response);
 			break;
 			
-			case "naarCheckPasswoord":
-				doel = "checkPasswoord.jsp";
-				String userid = request.getParameter("userid");
-				request.setAttribute("userid", userid);
+			case "deleteProduct":
+				deleteProduct(request, response);
 			break;
 			
-			case "changeColor":
-				doel = changeColor(request, response, q);
+			case "deletePerson":
+				deletePerson(request, response);
+			break;
+			
+			case "checkPassword":
+				checkPassword(request, response);
+			break;
+			
+			case "verifyPassword":
+				verifyPassword(request, response);
+			break;
 			
 			default:
-				doel = "index.jsp";
+				naarIndex(request, response);
 			break;
 		}
-		RequestDispatcher rd = request.getRequestDispatcher(doel);
-		rd.forward(request, response);
 	}
 	
-
-	private String maakUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	private void naarIndex(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.getRequestDispatcher("index.jsp").forward(request, response);
+	}
+	
+	private void naarSignUp(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.getRequestDispatcher("signUp.jsp").forward(request, response);
+	}
+	
+	private void naarAddProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.getRequestDispatcher("addProduct.jsp").forward(request, response);
+	}
+	
+	private void personOverview(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.setAttribute("persons", service.getPersons());
+		request.getRequestDispatcher("personoverview.jsp").forward(request, response);
+	}
+	
+	private void productOverview(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.setAttribute("products", service.getProducts());
+		request.getRequestDispatcher("productoverview.jsp").forward(request, response);
+	}
+	
+	private void registerPerson(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String userid = request.getParameter("userid");
+		String firstName = request.getParameter("firstName");
+		String lastName = request.getParameter("lastName");
+		String email = request.getParameter("email");
+		String password = request.getParameter("password");
 		
-		Person persons = new Person();
-		List<String> fouten = new ArrayList<String>();
+		Person pe = new Person();
+		List<String> errors = new ArrayList<String>();
 		
-		verwerkUserid(persons, request, fouten);
-		verwerkFirstName(persons, request, fouten);
-		verwerkLastName(persons, request, fouten);
-		verwerkEmail(persons, request, fouten);
+		this.setUserid(errors, pe, userid);
+		this.setFirstName(errors, pe, firstName);
+		this.setLastName(errors, pe, lastName);
+		this.setEmail(errors, pe, email);
+		this.setPassword(errors, pe, password);
+		
 		try {
-			persons.setPassword("password");
+			if (errors.isEmpty()) {
+				service.addPerson(pe);
+			}
+		}
+		catch (DbException e) {
+			errors.add(e.getMessage());
+		}
+		if (errors.isEmpty()) {
+			personOverview(request, response);
+		}
+		else {
+			request.setAttribute("errors", errors);
+			request.setAttribute("userid", userid);
+			request.setAttribute("firstName", firstName);
+			request.setAttribute("lastName", lastName);
+			request.setAttribute("email", email);
+			naarSignUp(request, response);
+		}
+	}
+	
+	private void registerProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String name = request.getParameter("name");
+		String description = request.getParameter("description");
+		String price = request.getParameter("price");
+		
+		Product pr = new Product();
+		List<String> errors = new ArrayList<String>();
+		
+		this.setName(errors, pr, name);
+		this.setDescription(errors, pr, description);
+		this.setPrice(errors, pr, price);
+		
+		try {
+			if (errors.isEmpty()) {
+				service.addProduct(pr);
+			}
+		}
+		catch (DbException e) {
+			errors.add(e.getMessage());
+		}
+		if (errors.isEmpty()) {
+			productOverview(request, response);
+		}
+		else {
+			request.setAttribute("errors", errors);
+			request.setAttribute("name", name);
+			request.setAttribute("description", description);
+			request.setAttribute("price", price);
+			naarAddProduct(request, response);
+		}
+	}
+	
+	private void setUserid (List<String> errors, Person pe, String userid) {
+		try {
+			pe.setUserid(userid);
 		}
 		catch (IllegalArgumentException e) {
-			fouten.add(e.getMessage());
-		}
-		
-		if (fouten.isEmpty()) {
-			try {
-				service.addPerson(persons);
-			}
-			catch (DbException e) {
-				fouten.add(e.getMessage());
-			}
-			
-			if (fouten.isEmpty()) {
-				return toonUser(request, response);
-			}
-			else {
-				request.setAttribute("fouten", fouten);
-				request.setAttribute("persons", persons);
-				return "signUp.jsp";
-			}
-		}
-		
-		else {
-			request.setAttribute("fouten", fouten);
-			return "signUp.jsp";
+			errors.add(e.getMessage());
 		}
 	}
 	
-	private void verwerkUserid(Person persons, HttpServletRequest request, List<String> fouten) {
-		
-		String userid = request.getParameter("userid");
-		
+	private void setFirstName (List<String> errors, Person pe, String firstName) {
 		try {
-			persons.setUserid(userid);
-			request.setAttribute("useridGelukt", "OK");
-			request.setAttribute("ingevuldeUserid", userid);
+			pe.setFirstName(firstName);
 		}
-		
-		catch (DomainException e) {
-			request.setAttribute("useridGelukt", "NOK");
-			fouten.add(e.getMessage());
+		catch (IllegalArgumentException e) {
+			errors.add(e.getMessage());
 		}
-		
 	}
 	
-	private void verwerkFirstName(Person persons, HttpServletRequest request, List<String> fouten) {
-		
-		String firstName = request.getParameter("firstName");
-		
+	private void setLastName (List<String> errors, Person pe, String lastName) {
 		try {
-			persons.setFirstName(firstName);
-			request.setAttribute("firstNameGelukt", "OK");
-			request.setAttribute("ingevuldeFirstName", firstName);
+			pe.setLastName(lastName);
 		}
-		
-		catch (DomainException e) {
-			request.setAttribute("firstNameGelukt", "NOK");
-			fouten.add(e.getMessage());
+		catch (IllegalArgumentException e) {
+			errors.add(e.getMessage());
 		}
-		
 	}
 	
-	private void verwerkLastName(Person persons, HttpServletRequest request, List<String> fouten) {
-		
-		String lastName = request.getParameter("lastName");
-		
+	private void setEmail (List<String> errors, Person pe, String email) {
 		try {
-			persons.setLastName(lastName);
-			request.setAttribute("lastNameGelukt", "OK");
-			request.setAttribute("ingevuldeLastName", lastName);
+			pe.setEmail(email);
 		}
-		
-		catch (DomainException e) {
-			request.setAttribute("lastNameGelukt", "NOK");
-			fouten.add(e.getMessage());
+		catch (IllegalArgumentException e) {
+			errors.add(e.getMessage());
 		}
-		
 	}
 	
-	private void verwerkEmail(Person persons, HttpServletRequest request, List<String> fouten) {
-		
-		String email = request.getParameter("email");
-		
+	private void setPassword (List<String> errors, Person pe, String password) {
 		try {
-			persons.setEmail(email);
-			request.setAttribute("emailGelukt", "OK");
-			request.setAttribute("ingevuldeEmail", email);
+			pe.setPassword(password);
 		}
-		
+		catch (IllegalArgumentException e) { 
+			errors.add(e.getMessage());
+		}
+	}
+	
+	private void setName (List<String> errors, Product pr, String name) {
+		try {
+			pr.setName(name);
+		}
 		catch (DomainException e) {
-			request.setAttribute("emailGelukt", "NOK");
-			fouten.add(e.getMessage());
-		}
-		
-	}
-	
-	private String maakProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
-		Product products = new Product();
-		List<String> fouten2 = new ArrayList<String>();
-		
-		verwerkName(products, request, fouten2);
-		verwerkDescription(products, request, fouten2);
-		verwerkPrice(products, request, fouten2);
-		verwerkReview(products, request, fouten2);
-		
-		if (fouten2.isEmpty()) {
-			try {
-				service.addProduct(products);
-			}
-			
-			catch (DbException e) {
-				fouten2.add(e.getMessage());
-			}
-			
-			if (fouten2.isEmpty()) {
-				return toonProduct(request, response);
-			}
-			
-			else {
-				request.setAttribute("fouten2", fouten2);
-				request.setAttribute("products", products);
-				return "addProduct.jsp";
-			}
-		}
-		
-		else {
-			request.setAttribute("fouten2", fouten2);
-			return "addProduct.jsp";
+			errors.add(e.getMessage());
 		}
 	}
 	
-	private void verwerkName(Product products, HttpServletRequest request, List<String> fouten2) {
-		
+	private void setDescription (List<String> errors, Product pr, String description) {
+		try {
+			pr.setDescription(description);
+		}
+		catch (DomainException e) {
+			errors.add(e.getMessage());
+		}
+	}
+	
+	private void setPrice (List<String> errors, Product pr, String price) {
+		try {
+			pr.setPrice(price);
+		}
+		catch (DomainException e) {
+			errors.add(e.getMessage());
+		}
+	}
+	
+	private void updateProduct (HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String productId = request.getParameter("productId");
 		String name = request.getParameter("name");
-		
-		try {
-			products.setName(name);
-			request.setAttribute("nameGelukt", "OK");
-			request.setAttribute("ingevuldeName", name);
-		}
-		
-		catch (DomainException e) {
-			request.setAttribute("nameGelukt", "NOK");
-			fouten2.add(e.getMessage());
-		}
-		
-	}
-	
-	private void verwerkDescription(Product products, HttpServletRequest request, List<String> fouten2) {
-		
 		String description = request.getParameter("description");
+		String price = request.getParameter("price");
 		
 		try {
-			products.setDescription(description);
-			request.setAttribute("descriptionGelukt", "OK");
-			request.setAttribute("ingevuldeDescription", description);
+			Product pr = service.getProduct(productId);
+			List<String> errors = new ArrayList<String>();
+			
+			this.setName(errors, pr, name);
+			this.setDescription(errors, pr, description);
+			this.setPrice(errors, pr, price);
+			
+			try {
+				if (errors.isEmpty()) {
+					service.updateProduct(pr);
+				}
+			}
+			catch (DbException e) {
+				errors.add(e.getMessage());
+			}
+			
+			if (errors.isEmpty()) {
+				productOverview(request, response);
+			}
+			else {
+				request.setAttribute("errors", errors);
+				request.setAttribute("product", pr);
+				editProduct(request, response);
+			}
 		}
-		
-		catch (DomainException e) {
-			request.setAttribute("descriptionGelukt", "NOK");
-			fouten2.add(e.getMessage());
+		catch (DbException e) {
+			editProduct(request, response);
 		}
-		
 	}
 	
-	private void verwerkPrice(Product products, HttpServletRequest request, List<String> fouten2) {
+	private void editProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String productId = request.getParameter("productId");
+		
+		try{
+			Product pr = service.getProduct(productId);
+			request.setAttribute("product", pr);
+			request.getRequestDispatcher("updateProduct.jsp").forward(request, response);
+		}
+		catch (DbException e){
+			productOverview(request, response);
+		}
+	}
+	
+	private void removeProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String productId = request.getParameter("productId");
 		
 		try {
-			double price = Double.parseDouble(request.getParameter("price"));
-			products.setPrice(price);
-			request.setAttribute("priceGelukt", "OK");
-			request.setAttribute("ingevuldePrice", price);
+			request.setAttribute("product", service.getProduct(productId));
+			request.getRequestDispatcher("productDelete.jsp").forward(request, response);
 		}
-		
-		catch (DomainException e) {
-			request.setAttribute("priceGelukt", "NOK");
-			fouten2.add(e.getMessage());
+		catch (DbException e) {
+			productOverview(request, response);
 		}
-		
-		catch (NumberFormatException e) {
-			request.setAttribute("priceGelukt", "NOK");
-			fouten2.add("Vul een geldige waarde in als prijs!");
-		}
-		
 	}
 	
-	private void verwerkReview(Product products, HttpServletRequest request, List<String> fouten2) {
-		
-		try {
-			double review = Double.parseDouble(request.getParameter("review"));
-			products.setReview(review);
-			request.setAttribute("reviewGelukt", "OK");
-			request.setAttribute("ingevuldeReview", review);
-		}
-		
-		catch (DomainException e) {
-			request.setAttribute("reviewGelukt", "NOK");
-			fouten2.add(e.getMessage());
-		}
-		
-		catch (NumberFormatException e) {
-			request.setAttribute("reviewGelukt", "NOK");
-			fouten2.add("Vul een geldige waarde in als nummer!");
-		}
-		
-	}
-	
-	private String toonUser(HttpServletRequest request, HttpServletResponse response) {
-		
-		request.setAttribute("alleUsers", service.getPersons());
-		
-		return "personoverview.jsp";
-		
-	}
-	
-	private String toonProduct(HttpServletRequest request, HttpServletResponse response) {
-		
-		request.setAttribute("alleProducten", service.getProducts());
-		
-		return "productoverview.jsp";
-		
-	}
-	
-	private String deletePerson(HttpServletRequest request, HttpServletResponse response) {
-		
-		String userid = request.getParameter("userid");
-		
-		service.deletePerson(userid);
-		
-		return toonUser(request, response);
-		
-	}
-	
-	private String deleteProduct(HttpServletRequest request, HttpServletResponse response) {
-		
-		int productId = Integer.parseInt(request.getParameter("productId"));
-		
-		service.deleteProduct(productId);
-		
-		return toonProduct(request, response);
-		
-	}
-	
-	private String updateProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
-		int productId = Integer.parseInt(request.getParameter("productId"));
-		
-		service.deleteProduct(productId);
-		
-		return maakProduct(request, response);
-		
-	}
-	
-	private String check(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
+	private void removePerson(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String userid = request.getParameter("userid");
 		
 		try {
-			Person p = service.getPerson(userid);
+			request.setAttribute("person", service.getPerson(userid));
+			request.getRequestDispatcher("personDelete.jsp").forward(request, response);
+		}
+		catch (DbException e) {
+			personOverview(request, response);
+		}
+	}
+	
+	private void deleteProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String productId = request.getParameter("productId");
+		
+		try {
+			service.deleteProduct(Integer.parseInt(productId));
+		}
+		catch (NumberFormatException e) {
+			
+		}
+		catch (DbException e) {
+			
+		}
+		productOverview(request, response);
+	}
+	
+	private void deletePerson(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String userid = request.getParameter("userid");
+		
+		try {
+			service.deletePerson(userid);
+		}
+		catch (DbException e) {
+			
+		}
+		personOverview(request, response);
+	}
+	
+	private void checkPassword(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String userid = request.getParameter("userid");
+		
+		try {
+			Person pe = service.getPerson(userid);
 			request.setAttribute("userid", userid);
-			request.getRequestDispatcher("checkPasswoord.jsp").forward(request, response);
+			request.getRequestDispatcher("checkPassword.jsp").forward(request, response);
 		}
-		
-		catch(DbException e) {
-			toonUser(request, response);
+		catch (DbException e) {
+			personOverview(request, response);
 		}
-		
-		return "checkPasswoord.jsp";
-		
 	}
 	
-	private String verifyPassword(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	
+	private void verifyPassword(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String userid = request.getParameter("userid");
 		String password = request.getParameter("password");
 		
-		try{
-			Person p = service.getPerson(userid);
-			request.setAttribute("correct", p.isCorrectPassword(password));
-			return "isPasswordCorrect.jsp";
+		try {
+			Person pe = service.getPerson(userid);
+			request.setAttribute("correct", pe.isCorrectPassword(password));
+			request.getRequestDispatcher("correctPassword.jsp").forward(request, response);
 		}
-		catch(DbException e){
-			return toonUser(request, response);
+		catch (DbException e) {
+			personOverview(request, response);
 		}
 	}
-	
-	private String changeColor (HttpServletRequest request, HttpServletResponse response, Cookie c) throws ServletException, IOException {
-
-		String origin = request.getParameter("page");
-		if (c.getValue().equals("yellow")) {
-			c.setValue("red");
-		}
-		else {
-			c.setValue("yellow");
-		}
-		response.addCookie(c);
-		response.sendRedirect("Controller?action=" + origin);
 		
-	}
 }
+	

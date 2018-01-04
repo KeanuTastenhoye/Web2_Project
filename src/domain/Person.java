@@ -1,32 +1,23 @@
 package domain;
 
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.SecureRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import db.StringHasher;
 
 public class Person {
 	private String userid;
 	private String email;
-	private String password;
+	private String hashedPassword;
 	private String firstName;
 	private String lastName;
-	private String salt;
+	private byte[] seed;
 
-	public Person(String userid, String email, String password, String firstName, String lastName, String salt) {
+	public Person(String userid, String email, String password, byte[] seed, String firstName, String lastName) {
 		setUserid(userid);
 		setEmail(email);
-		setPassword(password);
-		setFirstName(firstName);
-		setLastName(lastName);
-		setSalt(salt);
-	}
-	
-	public Person(String userid, String email, String password, String firstName, String lastName) {
-		setUserid(userid);
-		setEmail(email);
-		setPassword(password);
+		setSeed(seed);
+		setHashedPassword(password);
 		setFirstName(firstName);
 		setLastName(lastName);
 	}
@@ -39,15 +30,15 @@ public class Person {
 	}
 
 	public void setUserid(String userid) {
-		if(userid.isEmpty()){
-			throw new DomainException("No userid given");
+		if(userid.isEmpty() || userid == null){
+			throw new IllegalArgumentException("No userid given");
 		}
 		this.userid = userid;
 	}
 
 	public void setEmail(String email) {
 		if(email.isEmpty()){
-			throw new DomainException("No email given");
+			throw new IllegalArgumentException("No email given");
 		}
 		String USERID_PATTERN = 
 				"^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
@@ -55,7 +46,7 @@ public class Person {
 		Pattern p = Pattern.compile(USERID_PATTERN);
 		Matcher m = p.matcher(email);
 		if (!m.matches()) {
-			throw new DomainException("Email not valid");
+			throw new IllegalArgumentException("Email not valid");
 		}
 		this.email = email;
 	}
@@ -64,76 +55,45 @@ public class Person {
 		return email;
 	}
 	
-	public String getPassword() {
-		return password;
-	}
-	
-	public void setPassword(String password) {
-		if(password.isEmpty()){
-			throw new DomainException("No password given");
-		}
-		this.password = password;
-	}
-	
-	public void setPasswordHashed(String password) {
-		if(password.isEmpty()){
-			throw new DomainException("No hashed password given");
-		}
-		this.password = password;
+	public String getHashedPassword() {
+		return hashedPassword;
 	}
 	
 	public boolean isCorrectPassword(String password) {
 		if(password.isEmpty()){
-			throw new DomainException("No password given");
+			throw new IllegalArgumentException("No password given");
 		}
-		return getPassword().equals(password);
+		return getHashedPassword().equals(hashPassword(password));
+	}
+
+	public void setPassword(String password) {
+		if(password.isEmpty()){
+			throw new IllegalArgumentException("No password given");
+		}
+		setSeed(StringHasher.getSeed());
+		setHashedPassword(hashPassword(password));
 	}
 	
-	private String hashPassword(String password, String salt) {
-		try {
-			MessageDigest crypt = MessageDigest.getInstance("SHA-512");
-			crypt.reset();
-			SecureRandom random = new SecureRandom();
-			byte[] seed = random.generateSeed(20);
-			crypt.update(seed);
-			byte[] passwordBytes = password.getBytes("UTF-8");
-			crypt.update(passwordBytes);
-			byte[] digest = crypt.digest();
-			BigInteger digestAsBigInteger = new BigInteger(1, digest);
-			return digestAsBigInteger.toString(16);
-		}
-		catch (Exception e){
-			throw new DomainException(e.getMessage());
-		}
+	public void setSeed(byte[] seed){
+		this.seed = seed;
 	}
 	
-	public void setSalt(String salt) {
-		SecureRandom random = new SecureRandom();
-		// generate seed
-		byte[] seed = random.generateSeed(20);
-		BigInteger digestAsBigInteger = new BigInteger(1, seed);
-		this.salt = digestAsBigInteger.toString();
+	public byte[] getSeed(){
+		return this.seed;
 	}
 	
-	private void setSaltPerson(String salt) {
-		if (salt == null || salt.trim().isEmpty()) {
-			throw new DomainException("empty salt given, class person");
-		} else {
-			this.salt = salt;
+	public String hashPassword(String password){
+		return StringHasher.sha512(password, getSeed());
+	}
+	
+	public void setHashedPassword(String hashedPassword){
+		if(hashedPassword.isEmpty()){
+			throw new IllegalArgumentException("No hashedPassword given.");
 		}
-	}
-	
-	public boolean checkPasswordCorrect(String password) {
-		String passwordTocheck = hashPassword(password, this.salt);
-		if (passwordTocheck.equals(this.password)) {
-			return true;
-		} else {
-			return false;
+		if(hashedPassword.length() != 128){
+			throw new IllegalArgumentException("HashedPassword is of wrong length.");
 		}
-	}
-	
-	public String getSalt() {
-		return salt;
+		this.hashedPassword = hashedPassword;
 	}
 
 	public String getFirstName() {
@@ -142,7 +102,7 @@ public class Person {
 
 	public void setFirstName(String firstName) {
 		if(firstName.isEmpty()){
-			throw new DomainException("No firstname given");
+			throw new IllegalArgumentException("No firstname given");
 		}
 		this.firstName = firstName;
 	}
@@ -153,7 +113,7 @@ public class Person {
 
 	public void setLastName(String lastName) {
 		if(lastName.isEmpty()){
-			throw new DomainException("No last name given");
+			throw new IllegalArgumentException("No last name given");
 		}
 		this.lastName = lastName;
 	}

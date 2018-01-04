@@ -1,25 +1,40 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-<%@ page isErrorPage="true" %>
+<%@ page isErrorPage = "true" %>
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Something wrong</title>
-<link rel="stylesheet" type="text/css" href="css/style.css" href="css/red.css" href="css/yellow.css">
+<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/style.css">
+<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/yellow.css">
 </head>
 <body>
 	<div id="container">
-		<%@include file = "header.jspf" %>
-			<h2>Oops!</h2>
 		<main>
-			<p>Je hebt een '${pageContext.exception}' veroorzaakt op de server!</p>
-			<p>
-				<a href="${pageContext.request.contextPath }/Controller">Home</a>
-			</p>
+		<header>
+			<h1>
+				<span>Web shop</span>
+			</h1>
+			<nav>
+				<ul>
+					<li><a href="Controller">Home</a></li>
+					<li><a href="Controller?action=personOverview">Person Overview</a></li>
+					<li><a href="Controller?action=productOverview">Product Overview</a></li>
+					<li><a href="Controller?action=naarSignUp">Sign up</a></li>
+					<li><a href="Controller?action=naarAddProduct">Add product</a></li>
+				</ul>
+			</nav>
+			<h2>Error</h2>
+		</header>
+			<article>
+				<p> You caused a ${pageContext.exception} on the server! </p>
+				<p>
+					<a href="${pageContext.request.contextPath}/Controller">Home</a>
+				</p>
+			</article>
+		<footer> &copy; Webontwikkeling 3, UC Leuven-Limburg </footer>
 		</main>
-		<%@include file = "footer.jspf" %>
-	</div>	
+	</div>
 </body>
 </html>

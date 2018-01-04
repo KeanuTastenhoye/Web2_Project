@@ -5,24 +5,20 @@ public class Product {
 	private String name;
 	private String description;
 	private double price;
-	private double review;
 	
 	public Product() {
 		
 	}
-	
-	public Product(int productId, String name, String description, double price, double review) {
+	public Product(int productId, String name, String description, double d) {
 		setProductId(productId);
 		setName(name);
 		setDescription(description);
-		setPrice(price);
-		setReview(review);
+		setPrice(d);
 	}
-	public Product(String name, String description, double price, double review) {
+	public Product(String name, String description, double d) {
 		setName(name);
 		setDescription(description);
-		setPrice(price);
-		setReview(review);
+		setPrice(d);
 	}
 	public int getProductId() {
 		return productId;
@@ -46,7 +42,6 @@ public class Product {
 		if (description.isEmpty()) {
 			throw new DomainException("No description given");
 		}
-		
 		this.description = description;
 	}
 	public double getPrice() {
@@ -65,25 +60,9 @@ public class Product {
 		setPrice(Double.valueOf(price));
 	}
 	
-	public double getReview() {
-		return review;
-	}
-	public void setReview(double review) {
-		if (review<0) {
-			throw new DomainException("Give a valid review");
-		}
-		this.review = review;
-	}
-	public void setReviewNumber(String review) {
-		if (review.isEmpty()) {
-			throw new DomainException("No number given");
-		}
-		setReview(Double.valueOf(review));
-	}
-	
 	@Override
 	public String toString(){
-		return getName() + ": " + getDescription() + " - " + getPrice() + " - " + getReview();
+		return getName() + ": " + getDescription() + " - " + getPrice();
 	}
 	
 }

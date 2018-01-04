@@ -15,55 +15,47 @@ import domain.Person;
 public class PersonDbSql implements PersonDb {
 	
 	private Connection connection;
-	private Properties properties = new Properties();
-	private String url;
 	
-	public PersonDbSql(Properties properties) {
-		
+	public PersonDbSql(Properties properties, String url) {
+		Connection connection;
 		try {
-			Class.forName("org.postgresql.Driver");
-			this.properties = properties;
-			this.url = properties.getProperty("url");
+			Class.forName(properties.getProperty("driver"));
+			connection = DriverManager.getConnection(url, properties);
 		}
-		
-		catch (Exception e) {
-			throw new DbException(e.getMessage(), e);
+		catch (SQLException | ClassNotFoundException e) {
+			throw new DbException("Failed to initiate db", e);
 		}
+		this.connection = connection;
 	}
 	
-	private static void setPassword(Properties properties) {
-		properties.setProperty("password", "Ghia2016");
-	}
-
 	@Override
 	public Person get(String personId) {
-		Person person;
-		String sql = "SELECT * FROM person WHERE userid = ?";
-		try (Connection connection = DriverManager.getConnection(url, properties); PreparedStatement statement = connection.prepareStatement(sql);) {
+		String sql =  "SELECT * FROM person WHERE userid = ?";
+		try (PreparedStatement statement = connection.prepareStatement(sql);) {
 			statement.setString(1, personId);
 			ResultSet result = statement.executeQuery();
-			result.next();
-			String email = result.getString("email");
-			String password = result.getString("password");
-			String firstName = result.getString("firstName");
-			String lastName = result.getString("lastName");
-			person = new Person(personId, email, password, firstName, lastName);
+			if (result.next()) {
+				Person pe = new Person(result.getString("userid"), result.getString("email"), result.getString("password"), result.getBytes("seed"), result.getString("firsName"), result.getString("lastName"));
+				return pe;
+			}
+			else {
+				throw new DbException("Failed to get person.");
+			}
 		}
-		catch (SQLException e) {
-			throw new DbException(e.getMessage(), e);
+		catch (Exception e) {
+			throw new DbException("Failed to get person.", e);
 		}
-		return person;
 	}
-
+	
 	@Override
 	public List<Person> getAll() {
-		try (Connection connection = DriverManager.getConnection(url, properties); Statement statement = connection.createStatement();) {
+		try (Statement statement = connection.createStatement();) {
 			ResultSet result = statement.executeQuery("SELECT * FROM person");
 			List<Person> list = new ArrayList<>();
-			while(result.next()) {
+			while (result.next()) {
 				try {
-					Person pers = new Person(result.getString("userid"), result.getString("email"), result.getString("password"), result.getString("firstName"), result.getString("lastName"));
-					list.add(pers);
+					Person pe = new Person(result.getString("userid"), result.getString("email"), result.getString("password"), result.getBytes("seed"), result.getString("firstName"), result.getString("lastName"));
+					list.add(pe);
 				}
 				catch (IllegalArgumentException e) {
 					
@@ -75,62 +67,51 @@ public class PersonDbSql implements PersonDb {
 			throw new DbException("Failed to get persons.", e);
 		}
 	}
-
+	
 	@Override
 	public void add(Person person) {
-		
-		if (person == null){
-			throw new DbException("Nothing to add.");
-		}
-		String sql = "INSERT INTO person (userid, email, password, firstName, lastName)" + " VALUES (?, ?, ?, ?, ?)";
-		try (Connection connection = DriverManager.getConnection(url, properties);
-			 PreparedStatement statement = connection.prepareStatement(sql);
-			) {
+		String sql = "INSERT INTO person (userid, email, password, seed, firstName, lastName) VALUES (?, ?, ?, ?, ?, ?)";
+		try (PreparedStatement statement = connection.prepareStatement(sql);) {
 			statement.setString(1, person.getUserid());
 			statement.setString(2, person.getEmail());
-			statement.setString(3, person.getPassword());
-			statement.setString(4, person.getFirstName());
-			statement.setString(5, person.getLastName());
-			
-			statement.execute();
+			statement.setString(3, person.getHashedPassword());
+			statement.setBytes(4, person.getSeed());
+			statement.setString(5, person.getFirstName());
+			statement.setString(6, person.getLastName());
+			statement.executeUpdate();
 		}
-		catch (SQLException e) {
-			throw new DbException(e);
+		catch (Exception e) {
+			throw new DbException("Failed to add person.", e);
 		}
 	}
-		
+	
 	@Override
 	public void update(Person person) {
-		
-		if (person == null){
-			throw new DbException("Nothing to update.");
+		String sql = "UPDATE person SET email = ?, password = ?, seed = ?, firstName = ?, lastName = ? WHERE userid = ?";
+		try (PreparedStatement statement = connection.prepareStatement(sql);) {
+			statement.setString(1, person.getEmail());
+			statement.setString(2, person.getHashedPassword());
+			statement.setBytes(3, person.getSeed());
+			statement.setString(4, person.getFirstName());
+			statement.setString(5, person.getLastName());
+			statement.setString(6, person.getUserid());
+			statement.executeUpdate();
 		}
-		String sql = "UPDATE person SET email = '" + person.getEmail() + "', password = '" + person.getPassword() + "', firstName = '" + person.getFirstName() + "', lastName = '" + person.getLastName() + "' WHERE userid = '" + person.getUserid() + "'";
-		try {
-			Statement statement = connection.createStatement();
-			statement.executeUpdate(sql);
-		} 
-		catch (SQLException e) {
-			throw new DbException(e);
+		catch (Exception e) {
+			throw new DbException("Failed to update person.", e);
 		}
-		
 	}
-
+	
 	@Override
 	public void delete(String personId) {
-	
-		if (personId == null){
-			throw new DbException("Nothing to delete.");
+		String sql = "DELETE FROM person WHERE userid = ?";
+		try (PreparedStatement statement = connection.prepareStatement(sql);) {
+			statement.setString(1, personId);
+			statement.executeUpdate();
 		}
-		String sql = "DELETE from person WHERE userid = '" + personId + "'";
-		try {
-			Statement statement = connection.createStatement();
-			statement.executeUpdate(sql);
-		} 
-		catch (SQLException e) {
-			throw new DbException(e);
+		catch (Exception e) {
+			throw new DbException("Failed to remove person.", e);
 		}
-		
 	}
 
 }

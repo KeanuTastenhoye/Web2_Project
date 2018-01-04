@@ -3,28 +3,38 @@ package domain;
 import java.util.List;
 import java.util.Properties;
 
-import db.*;
+import db.DbException;
+import db.PersonDb;
+import db.PersonDbSql;
+import db.ProductDb;
+import db.ProductDbSql;
 
 public class ShopService {
 	private PersonDb personDb;
 	private ProductDb productDb;
 
-//	public ShopService() {
-//		personDb = new PersonDbSql();
-//		productDb = new ProductDbSql();
-//	}
-	
-	public ShopService(Properties properties) {
-		personDb = new PersonDbSql(properties);
-		productDb = new ProductDbSql(properties);
+	public ShopService(){
+		String url = "jdbc:postgresql://gegevensbanken.khleuven.be:51617/1TX32?currentSchema=r0667956";
+		Properties properties = new Properties();
+		properties.setProperty("user", "r0667956");
+		properties.setProperty("password", "Ghia2016");
+		properties.setProperty("ssl", "true");
+		properties.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
+		properties.setProperty("driver", "org.postgresql.Driver");
+		personDb = new PersonDbSql(properties, url);
+		productDb = new ProductDbSql(properties, url);
 	}
 	
 	public Person getPerson(String personId) {
 		return getPersonDb().get(personId);
 	}
 	
-	public Product getProduct(int productId) {
-		return getProductDb().get(productId);
+	public Product getProduct(String id) {
+		try{
+			return productDb.get(Integer.parseInt(id));
+		}catch(NumberFormatException e){
+			throw new DbException("Id must be a integer.");
+		}
 	}
 
 	public List<Person> getPersons() {
@@ -47,16 +57,16 @@ public class ShopService {
 		getPersonDb().update(person);
 	}
 	
-	public void updateProducts(Product product) {
+	public void updateProduct(Product product) {
 		getProductDb().update(product);
 	}
 
-	public void deletePerson(String id) {
-		getPersonDb().delete(id);
+	public void deletePerson(String personId) {
+		getPersonDb().delete(personId);
 	}
 	
-	public void deleteProduct(int id) {
-		getProductDb().delete(id);
+	public void deleteProduct(int productId) {
+		productDb.delete(productId);
 	}
 
 	private PersonDb getPersonDb() {
@@ -65,10 +75,5 @@ public class ShopService {
 	
 	private ProductDb getProductDb() {
 		return productDb;
-	}
-	
-	public boolean checkPassword(String personId, String password) {
-		Person p = personDb.get(personId);
-		return p.checkPasswordCorrect(password);
 	}
 }

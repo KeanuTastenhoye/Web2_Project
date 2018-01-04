@@ -11,10 +11,11 @@ public class PersonDbInMemory implements PersonDb {
 	private Map<String, Person> persons = new HashMap<String, Person>();
 	
 	public PersonDbInMemory () {
-		Person administrator = new Person("admin", "admin@ucll.be", "t", "Ad", "Ministrator");
+		Person administrator = new Person("admin", "admin@ucll.be", null, null, "Ad", "Ministrator");
+		administrator.setPassword("t");
 		add(administrator);
 	}
-	
+
 	@Override
 	public Person get(String personId){
 		if(personId == null){
@@ -22,7 +23,7 @@ public class PersonDbInMemory implements PersonDb {
 		}
 		return persons.get(personId);
 	}
-	
+
 	@Override
 	public List<Person> getAll(){
 		return new ArrayList<Person>(persons.values());	
@@ -38,7 +39,7 @@ public class PersonDbInMemory implements PersonDb {
 		}
 		persons.put(person.getUserid(), person);
 	}
-	
+
 	@Override
 	public void update(Person person){
 		if(person == null){
@@ -49,7 +50,7 @@ public class PersonDbInMemory implements PersonDb {
 		}
 		persons.put(person.getUserid(), person);
 	}
-	
+
 	@Override
 	public void delete(String personId){
 		if(personId == null){
