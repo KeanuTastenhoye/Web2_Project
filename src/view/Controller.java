@@ -10,6 +10,7 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -55,6 +56,30 @@ public class Controller extends HttpServlet {
 	}
 	
 	protected void verwerkRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		Cookie q = null;
+		if (request.getCookies() != null) {
+			for (Cookie c: request.getCookies()) {
+				if (c.getName().equals("color")) {
+					q = c;
+					break;
+				}
+			}
+		}
+		
+		if (q == null) {
+			q = new Cookie("color", "yellow");
+		}
+		
+		String color = q.getValue();
+		if (!(color.equals("yellow") || color.equals("red"))) {
+			request.setAttribute("color", "yellow");
+		}
+		
+		else {
+			request.setAttribute("color", color);
+		}
+		
 		String doel;
 		String action = request.getParameter("action");
 		if (action == null) {
@@ -124,7 +149,12 @@ public class Controller extends HttpServlet {
 			
 			case "naarCheckPasswoord":
 				doel = "checkPasswoord.jsp";
+				String userid = request.getParameter("userid");
+				request.setAttribute("userid", userid);
 			break;
+			
+			case "changeColor":
+				doel = changeColor(request, response, q);
 			
 			default:
 				doel = "index.jsp";
@@ -427,10 +457,24 @@ public class Controller extends HttpServlet {
 		try{
 			Person p = service.getPerson(userid);
 			request.setAttribute("correct", p.isCorrectPassword(password));
-			return "checkPasswoord.jsp";
+			return "isPasswordCorrect.jsp";
 		}
 		catch(DbException e){
 			return toonUser(request, response);
 		}
+	}
+	
+	private String changeColor (HttpServletRequest request, HttpServletResponse response, Cookie c) throws ServletException, IOException {
+
+		String origin = request.getParameter("page");
+		if (c.getValue().equals("yellow")) {
+			c.setValue("red");
+		}
+		else {
+			c.setValue("yellow");
+		}
+		response.addCookie(c);
+		response.sendRedirect("Controller?action=" + origin);
+		
 	}
 }

@@ -24,10 +24,14 @@
 				</div>
 			</c:if>
 			
-			<form method="post" action="Controller?action=verify&userid=${userid}" novalidate="novalidate">
-        		<label for="name">Password</label>
-        		<input type="password" id="password" name="password" required value="">
-        		<input type="submit" id="submit" value="checkPassword">
+			<form method="post" action="Controller?action=verify&userid=<c:out value='${userid}'/>" novalidate="novalidate">
+				  <p>
+        			<label for="name">Password</label>
+        			<input type="password" id="password" name="password" required value="">
+        		  </p>
+        		  <p>
+        			<input type="submit" id="submit" value="Check">
+        		  </p>
         	</form>
 		</main>
 		<%@include file="footer.jspf"%>

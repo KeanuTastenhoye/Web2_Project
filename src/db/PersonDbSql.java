@@ -38,7 +38,7 @@ public class PersonDbSql implements PersonDb {
 	@Override
 	public Person get(String personId) {
 		Person person;
-		String sql = "SELECT * FROM person WHERE email = '" + "?";
+		String sql = "SELECT * FROM person WHERE userid = ?";
 		try (Connection connection = DriverManager.getConnection(url, properties); PreparedStatement statement = connection.prepareStatement(sql);) {
 			statement.setString(1, personId);
 			ResultSet result = statement.executeQuery();
